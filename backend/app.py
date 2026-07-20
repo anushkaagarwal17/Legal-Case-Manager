@@ -6,6 +6,8 @@ from reminders import mail, init_scheduler
 from routes.cases import cases_bp
 from routes.hearings import hearings_bp
 from routes.documents import documents_bp
+from routes.ai import ai_bp
+app.register_blueprint(ai_bp, url_prefix='/api/ai')
 # 1. Import new blueprints (Create these files in routes/ when setting up auth and AI)
 # from routes.auth import auth_bp
 # from routes.ai import ai_bp
