@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Case
+from google import genai
 
 cases_bp = Blueprint('cases', __name__)
 
@@ -138,3 +139,51 @@ def get_stats():
         'total': total, 'active': active, 'disposed': disposed,
         'civil': civil, 'criminal': criminal, 'revenue': revenue,
     }), 200
+
+@cases_bp.route('/<int:case_id>/summarize', methods=['POST'])
+def summarize_case(case_id):
+    case = Case.query.get_or_404(case_id)
+    data = request.json or {}
+    hearing_notes = data.get('hearing_notes', '')
+
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        return jsonify({"error": "GEMINI_API_KEY environment variable is missing in Render"}), 500
+
+    try:
+        # Initialize Gemini Client
+        client = genai.Client(api_key=api_key)
+        
+        prompt = f"""
+        You are an expert AI legal assistant. Generate a concise, clear summary of the following legal case.
+        
+        Case Title: {case.title}
+        Client Name: {case.client_name}
+        Case Description: {case.description or 'N/A'}
+        Recent Hearing / Progress Notes: {hearing_notes}
+        
+        Provide the response in two short sections:
+        1. **Client Summary:** A simple 2-sentence explanation suitable for the client in plain language.
+        2. **Key Action Items:** Bullet points of immediate next steps or upcoming dates.
+        """
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+
+        ai_summary_text = response.text
+
+        # Save AI summary directly to the database
+        case.ai_summary = ai_summary_text
+        db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "summary": ai_summary_text,
+            "case": case.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"AI Generation failed: {str(e)}"}), 500
