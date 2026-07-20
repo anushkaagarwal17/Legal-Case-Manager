@@ -4,6 +4,9 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 })
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://lextrack-backend-8rih.onrender.com';
+export default API_URL;
+
 // Cases
 export const getCases     = (params) => API.get('/cases/', { params })
 export const getCase      = (id)     => API.get(`/cases/${id}`)
