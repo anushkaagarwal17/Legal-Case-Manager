@@ -51,8 +51,8 @@ def create_app():
     app.register_blueprint(documents_bp, url_prefix='/api/cases')
     
     # Register Auth and AI blueprints once created:
-    # app.register_blueprint(auth_bp,      url_prefix='/api/auth')
-    # app.register_blueprint(ai_bp,        url_prefix='/api/ai')
+    app.register_blueprint(auth_bp,      url_prefix='/api/auth')
+    app.register_blueprint(ai_bp,        url_prefix='/api/ai')
 
     # Standalone hearing routes
     from routes.hearings import upcoming_hearings, cause_list
