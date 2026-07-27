@@ -23,7 +23,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('secret_key', 'lex_track_secure_2026_key')
 
     # Fix Render PostgreSQL URL compatibility (postgres:// -> postgresql://)
-    db_url = os.getenv('DATABASE_URL', 'sqlite:///lextrack.db')
+    db_url = os.getenv('DATABASE_URL', 'sqlite:///lextrack_fresh.db')
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
         
