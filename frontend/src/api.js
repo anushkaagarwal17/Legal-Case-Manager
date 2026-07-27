@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: '/api',
 })
 
 // Add request/response logging interceptors
@@ -27,8 +27,7 @@ API.interceptors.response.use(
   }
 )
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://lextrack-backend-8rih.onrender.com';
-export default API_URL;
+export default API;
 
 // Cases
 export const getCases     = (params) => API.get('/cases/', { params })
