@@ -37,7 +37,6 @@ class Case(db.Model):
     court        = db.Column(db.String(200), nullable=True)     # Changed nullable=True to prevent submit crash
     status       = db.Column(db.String(50), default='Active')  # Active / Disposed / Stayed
     description  = db.Column(db.Text)
-    ai_summary   = db.Column(db.Text)                           # New: Stores Gemini AI Case Insights
     
     # Dual Portal Links
     lawyer_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -62,7 +61,6 @@ class Case(db.Model):
             'court':        self.court,
             'status':       self.status,
             'description':  self.description,
-            'ai_summary':   self.ai_summary,
             'lawyer_id':    self.lawyer_id,
             'client_id':    self.client_id,
             'created_at':   self.created_at.isoformat(),
