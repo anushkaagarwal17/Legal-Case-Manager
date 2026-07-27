@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from models import db
@@ -6,16 +6,14 @@ from reminders import mail, init_scheduler
 from routes.cases import cases_bp
 from routes.hearings import hearings_bp
 from routes.documents import documents_bp
-
-# 1. Import new blueprints (Create these files in routes/ when setting up auth and AI)
-# from routes.auth import auth_bp
-# from routes.ai import ai_bp
 import os
 
 load_dotenv()
 
 def create_app():
-    app = Flask(__name__)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_dir = os.path.join(base_dir, 'frontend', 'dist')
+    app = Flask(__name__, static_folder=static_dir, static_url_path='')
     
     # Allow credentials for authenticated API calls from Vercel
     CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
@@ -71,10 +69,20 @@ def create_app():
     @app.route('/api/health')
     def health():
         return {'status': 'ok', 'app': 'LexTrack'}
-    
+
     @app.route('/')
-    def home():
-        return {"status": "success", "message": "Legal Case Manager Backend is running smoothly!"}
+    def serve_index():
+        index_path = os.path.join(app.static_folder, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(app.static_folder, 'index.html')
+        return {"status": "success", "message": "Legal Case Manager Backend is running. Frontend not built yet."}
+
+    @app.errorhandler(404)
+    def not_found(error):
+        index_path = os.path.join(app.static_folder, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(app.static_folder, 'index.html')
+        return jsonify({'error': 'Not found'}), 404
 
     return app
 
