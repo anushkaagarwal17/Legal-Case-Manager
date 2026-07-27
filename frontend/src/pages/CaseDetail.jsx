@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Globe, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { getCase } from '../api';
 
 export default function CaseDetail({ darkMode }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [caseData, setCaseData] = useState(null);
   const [pastedStatus, setPastedStatus] = useState('');
-  const [historyLog, setHistoryLog] = useState([
-    { date: "15 June 2026", text: "Case listed in Courtroom 3. Adjourned due to lack of time." }
-  ]);
+  const [historyLog, setHistoryLog] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log(`[API] Fetching case details for ID: ${id}`);
+    getCase(id)
+      .then(res => {
+        console.log('[API] Case details fetched:', res.data);
+        setCaseData(res.data);
+        setHistoryLog([
+          { date: "15 June 2026", text: "Case listed in Courtroom 3. Adjourned due to lack of time." }
+        ]);
+      })
+      .catch(err => console.error(`[API ERROR] Failed to fetch case ${id}:`, err))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const handleSync = (e) => {
     e.preventDefault();

@@ -4,6 +4,29 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 })
 
+// Add request/response logging interceptors
+API.interceptors.request.use(
+  config => {
+    console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data)
+    return config
+  },
+  error => {
+    console.error('[API ERROR] Request failed:', error)
+    return Promise.reject(error)
+  }
+)
+
+API.interceptors.response.use(
+  response => {
+    console.log(`[API RESPONSE] ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data)
+    return response
+  },
+  error => {
+    console.error('[API ERROR] Response failed:', error.response?.status, error.message, error.response?.data)
+    return Promise.reject(error)
+  }
+)
+
 const API_URL = import.meta.env.VITE_API_URL || 'https://lextrack-backend-8rih.onrender.com';
 export default API_URL;
 

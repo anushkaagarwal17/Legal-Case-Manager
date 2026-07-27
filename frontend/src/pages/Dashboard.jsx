@@ -1,12 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Briefcase, Scale, CheckCircle2, AlertTriangle, ShieldAlert, FileText, ExternalLink, Link2 } from 'lucide-react';
-
-const SAMPLE_CASES = [
-  { id: 1, case_no: "CS/2401/2025", title: "Commercial Contract Breach Settlement", client: "Acme Corp Ltd", type: "Civil", status: "Active" },
-  { id: 2, case_no: "CRM/412/2026", title: "Intellectual Property Trespass Claims", client: "Varsha Sapra", type: "Criminal", status: "Active" },
-  { id: 3, case_no: "REV/902/2024", title: "Agricultural Land Assessment Appeal", client: "Jyoshita Sapra", type: "Revenue", status: "Disposed" },
-  { id: 4, case_no: "CS/1150/2026", title: "Tenant Eviction & Non-Payment Suit", client: "Rajesh Kumar", type: "Civil", status: "Active" }
-];
+import { getCases } from '../api';
 
 const PORTAL_LINKS = [
   { name: "eCourts Services", url: "https://ecourts.gov.in", desc: "Check CNR numbers & daily order sheets" },
@@ -16,7 +10,32 @@ const PORTAL_LINKS = [
 ];
 
 export default function Dashboard({ darkMode }) {
-  const stats = { total: 4, active: 3, disposed: 1, civil: 2, criminal: 1, revenue: 1 };
+  const [cases, setCases] = useState([]);
+  const [stats, setStats] = useState({ total: 0, active: 0, disposed: 0, civil: 0, criminal: 0, revenue: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log('[API] Fetching cases for dashboard...');
+    getCases()
+      .then(res => {
+        console.log('[API] Cases fetched successfully:', res.data);
+        setCases(res.data);
+
+        const caseList = res.data;
+        const newStats = {
+          total: caseList.length,
+          active: caseList.filter(c => c.status === 'Active').length,
+          disposed: caseList.filter(c => c.status === 'Disposed').length,
+          civil: caseList.filter(c => c.case_type === 'Civil').length,
+          criminal: caseList.filter(c => c.case_type === 'Criminal').length,
+          revenue: caseList.filter(c => c.case_type === 'Revenue').length
+        };
+        setStats(newStats);
+        console.log('[STATS] Computed stats:', newStats);
+      })
+      .catch(err => console.error('[API ERROR] Failed to fetch cases:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -102,19 +121,25 @@ export default function Dashboard({ darkMode }) {
               </tr>
             </thead>
             <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
-              {SAMPLE_CASES.map((item) => (
-                <tr key={item.id} className={`transition-colors ${darkMode ? 'hover:bg-zinc-900/50' : 'hover:bg-zinc-50/80'}`}>
-                  <td className="px-6 py-3.5 font-mono font-medium text-zinc-500">{item.case_no}</td>
-                  <td className={`px-6 py-3.5 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{item.title}</td>
-                  <td className="px-6 py-3.5">{item.client}</td>
-                  <td className="px-6 py-3.5">{item.type}</td>
-                  <td className="px-6 py-3.5">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${
-                      item.status === 'Active' ? 'bg-zinc-900 text-zinc-100 border border-zinc-700' : 'bg-zinc-200 text-zinc-600'
-                    }`}>{item.status}</span>
-                  </td>
-                </tr>
-              ))}
+              {loading ? (
+                <tr><td colSpan="5" className="px-6 py-4 text-center text-zinc-400">Loading...</td></tr>
+              ) : cases.length === 0 ? (
+                <tr><td colSpan="5" className="px-6 py-4 text-center text-zinc-400">No cases found</td></tr>
+              ) : (
+                cases.slice(0, 4).map((item) => (
+                  <tr key={item.id} className={`transition-colors ${darkMode ? 'hover:bg-zinc-900/50' : 'hover:bg-zinc-50/80'}`}>
+                    <td className="px-6 py-3.5 font-mono font-medium text-zinc-500">{item.case_number}</td>
+                    <td className={`px-6 py-3.5 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{item.title}</td>
+                    <td className="px-6 py-3.5">{item.client_name}</td>
+                    <td className="px-6 py-3.5">{item.case_type}</td>
+                    <td className="px-6 py-3.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${
+                        item.status === 'Active' ? 'bg-zinc-900 text-zinc-100 border border-zinc-700' : 'bg-zinc-200 text-zinc-600'
+                      }`}>{item.status}</span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

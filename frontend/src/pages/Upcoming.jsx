@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, X, Gavel, User, Clock, AlertCircle } from 'lucide-react';
-
-const INITIAL_HEARINGS = [
-  { id: 1, case_no: "CS/2401/2025", title: "Commercial Contract Breach Settlement", client: "Acme Corp Ltd", date: "2026-06-26", time: "10:30", courtroom: "Courtroom 4, High Court" },
-  { id: 2, case_no: "CRM/412/2026", title: "Intellectual Property Trespass Claims", client: "Varsha Sapra", date: "2026-06-29", time: "14:00", courtroom: "Courtroom 11, District Sessions" }
-];
+import { getUpcoming, addHearing } from '../api';
 
 export default function Upcoming({ darkMode }) {
-  const [hearings, setHearings] = useState(INITIAL_HEARINGS);
+  const [hearings, setHearings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newHearing, setNewHearing] = useState({
     case_no: '',
@@ -17,16 +14,53 @@ export default function Upcoming({ darkMode }) {
     time: '',
     courtroom: ''
   });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleCreateHearing = (e) => {
+  useEffect(() => {
+    console.log('[API] Fetching upcoming hearings...');
+    getUpcoming()
+      .then(res => {
+        console.log('[API] Upcoming hearings fetched:', res.data);
+        setHearings(res.data);
+      })
+      .catch(err => console.error('[API ERROR] Failed to fetch upcoming hearings:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleCreateHearing = async (e) => {
     e.preventDefault();
-    const hearingEntry = {
-      id: Date.now(),
-      ...newHearing
-    };
-    setHearings([...hearings, hearingEntry]);
-    setIsModalOpen(false);
-    setNewHearing({ case_no: '', title: '', client: '', date: '', time: '', courtroom: '' });
+    setSubmitting(true);
+
+    console.log('[API] Submitting new hearing:', newHearing);
+
+    try {
+      const payload = {
+        hearing_date: newHearing.date,
+        hearing_time: newHearing.time,
+        purpose: 'Hearing'
+      };
+
+      const res = await addHearing(1, payload);
+      console.log('[API] Hearing created:', res.data);
+
+      const hearingEntry = {
+        id: res.data.id || Date.now(),
+        case_no: newHearing.case_no,
+        title: newHearing.title,
+        client: newHearing.client,
+        date: newHearing.date,
+        time: newHearing.time,
+        courtroom: newHearing.courtroom
+      };
+
+      setHearings([...hearings, hearingEntry]);
+      setIsModalOpen(false);
+      setNewHearing({ case_no: '', title: '', client: '', date: '', time: '', courtroom: '' });
+    } catch (err) {
+      console.error('[API ERROR] Failed to create hearing:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -52,7 +86,11 @@ export default function Upcoming({ darkMode }) {
       </div>
 
       {/* Main Content Area */}
-      {hearings.length === 0 ? (
+      {loading ? (
+        <div className={`text-center py-20 border border-dashed rounded-xl ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+          <p className="text-sm text-zinc-400">Loading hearings...</p>
+        </div>
+      ) : hearings.length === 0 ? (
         <div className={`text-center py-20 border border-dashed rounded-xl ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
           <p className="text-sm text-zinc-400">No active hearings scheduled in your docket tracking logs.</p>
         </div>
@@ -73,22 +111,22 @@ export default function Upcoming({ darkMode }) {
                 </tr>
               </thead>
               <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
-                {hearings.sort((a,b) => new Date(a.date) - new Date(b.date)).map((item) => (
+                {hearings.sort((a,b) => new Date(a.hearing_date) - new Date(b.hearing_date)).map((item) => (
                   <tr key={item.id} className={`transition-colors ${darkMode ? 'hover:bg-zinc-900/50' : 'hover:bg-zinc-50/80'}`}>
                     <td className="px-6 py-4 space-y-1">
                       <div className={`font-semibold ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
-                        {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(item.hearing_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
-                      <div className="text-zinc-400 flex items-center gap-1"><Clock size={11} /> {item.time} hrs</div>
+                      <div className="text-zinc-400 flex items-center gap-1"><Clock size={11} /> {item.hearing_time} hrs</div>
                     </td>
                     <td className="px-6 py-4 space-y-1">
-                      <div className="font-mono font-medium text-zinc-400">{item.case_no}</div>
+                      <div className="font-mono font-medium text-zinc-400">{item.case_number}</div>
                       <div className={`font-medium max-w-sm truncate ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{item.title}</div>
                     </td>
-                    <td className="px-6 py-4 text-zinc-500">{item.client}</td>
+                    <td className="px-6 py-4 text-zinc-500">{item.client_name}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded flex items-center gap-1.5 w-fit ${darkMode ? 'bg-zinc-900 text-zinc-300' : 'bg-zinc-100 text-zinc-800'}`}>
-                        <Gavel size={11} className="text-zinc-400" /> {item.courtroom}
+                        <Gavel size={11} className="text-zinc-400" /> {item.court}
                       </span>
                     </td>
                   </tr>
@@ -154,8 +192,11 @@ export default function Upcoming({ darkMode }) {
                   className={`w-full p-2.5 rounded-lg border focus:outline-none ${darkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200'}`} />
               </div>
 
-              <button type="submit" className={`w-full py-2.5 font-semibold rounded-lg text-white mt-2 ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-900 hover:bg-zinc-800'}`}>
-                Commit to Calendar
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`w-full py-2.5 font-semibold rounded-lg text-white mt-2 ${darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-900 hover:bg-zinc-800'} ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {submitting ? 'Saving...' : 'Commit to Calendar'}
               </button>
             </form>
           </div>

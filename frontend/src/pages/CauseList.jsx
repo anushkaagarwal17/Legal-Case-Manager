@@ -10,7 +10,14 @@ export default function CauseList() {
 
   const fetch = () => {
     setLoading(true)
-    getCauseList(date).then(r => setList(r.data)).finally(() => setLoading(false))
+    console.log(`[API] Fetching cause list for date: ${date}`)
+    getCauseList(date)
+      .then(r => {
+        console.log('[API] Cause list fetched:', r.data)
+        setList(r.data)
+      })
+      .catch(err => console.error('[API ERROR] Failed to fetch cause list:', err))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { fetch() }, [date])

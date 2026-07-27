@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
+import { addCase } from '../api';
 
 export default function AddCase({ darkMode }) {
   const navigate = useNavigate();
@@ -11,12 +12,34 @@ export default function AddCase({ darkMode }) {
     type: 'Civil',
     status: 'Active'
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Verification handling can be attached here
-    console.log("New Case Form Submission Data:", formData);
-    navigate('/cases');
+    setLoading(true);
+    setError('');
+
+    console.log('[API] Submitting new case:', formData);
+
+    try {
+      const payload = {
+        case_number: formData.caseNo,
+        client_name: formData.clientName,
+        title: formData.title,
+        case_type: formData.type,
+        status: formData.status
+      };
+
+      const res = await addCase(payload);
+      console.log('[API] Case created successfully:', res.data);
+      navigate('/cases');
+    } catch (err) {
+      console.error('[API ERROR] Failed to create case:', err);
+      setError(err.response?.data?.message || 'Failed to create case');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -144,24 +167,32 @@ export default function AddCase({ darkMode }) {
           </div>
         </div>
 
+        {error && (
+          <div className={`px-4 py-3 rounded-lg text-xs font-medium border ${darkMode ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+            {error}
+          </div>
+        )}
+
         {/* Action Options Button Panel */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-dashed border-zinc-200 dark:border-zinc-800">
           <button
             type="button"
             onClick={() => navigate('/cases')}
+            disabled={loading}
             className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
               darkMode ? 'text-zinc-400 hover:text-white bg-zinc-900' : 'text-zinc-600 hover:bg-zinc-100'
-            }`}
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Cancel
           </button>
           <button
             type="submit"
+            disabled={loading}
             className={`px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-lg text-white shadow-sm transition-colors ${
               darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-900 hover:bg-zinc-800'
-            }`}
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <Save size={14} /> Record Case File
+            <Save size={14} /> {loading ? 'Saving...' : 'Record Case File'}
           </button>
         </div>
       </form>
