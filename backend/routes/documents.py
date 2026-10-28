@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from models import db, Document, LegalMemo, Case
 from werkzeug.utils import secure_filename
-import os, anthropic
+import os
 
 documents_bp = Blueprint('documents', __name__)
 
@@ -87,6 +87,7 @@ Case Description: {case.description or 'Not provided'}
 Legal Query: {query}"""
 
     try:
+        import anthropic
         client = anthropic.Anthropic()
         message = client.messages.create(
             model      = "claude-sonnet-4-6",

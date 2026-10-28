@@ -157,7 +157,48 @@ def seed_initial_data(app):
             )
             db.session.add(pay2)
             db.session.commit()
-            print("[SEED] Seeded initial active docket matters with payment ledger.")
+
+            from models import Hearing
+            from datetime import date, timedelta
+            h1 = Hearing(
+                case_id=case1.id,
+                hearing_date=date.today(),
+                hearing_time='10:30 AM',
+                purpose='Arguments on Temporary Injunction Application (Order 39 CPC)'
+            )
+            h2 = Hearing(
+                case_id=case2.id,
+                hearing_date=date.today() + timedelta(days=2),
+                hearing_time='02:15 PM',
+                purpose='Commercial Cheque Counterfoil & Evidence Verification'
+            )
+            db.session.add(h1)
+            db.session.add(h2)
+            db.session.commit()
+            print("[SEED] Seeded initial active docket matters, hearings, and payment ledger.")
+
+        # Ensure hearings exist for hearing reminder alerts
+        from models import Hearing
+        if Hearing.query.count() == 0:
+            first_case = Case.query.first()
+            if first_case:
+                from datetime import date, timedelta
+                h1 = Hearing(
+                    case_id=first_case.id,
+                    hearing_date=date.today(),
+                    hearing_time='10:30 AM',
+                    purpose='Urgent Hearing: Arguments on Stay Application'
+                )
+                h2 = Hearing(
+                    case_id=first_case.id,
+                    hearing_date=date.today() + timedelta(days=2),
+                    hearing_time='02:15 PM',
+                    purpose='Framing of Issues & Case Management'
+                )
+                db.session.add(h1)
+                db.session.add(h2)
+                db.session.commit()
+                print("[SEED] Seeded upcoming hearing reminders.")
 
 
 def create_app():

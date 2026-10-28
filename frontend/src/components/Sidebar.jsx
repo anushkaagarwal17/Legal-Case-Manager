@@ -11,10 +11,19 @@ import {
   ShieldCheck,
   UserCheck,
   Gavel,
-  Landmark
+  Landmark,
+  Bell,
+  Volume2
 } from 'lucide-react';
 
-export default function Sidebar({ darkMode, setDarkMode, currentUser, onSwitchRole }) {
+export default function Sidebar({ 
+  darkMode, 
+  setDarkMode, 
+  currentUser, 
+  onSwitchRole, 
+  onOpenAlarm, 
+  todayHearingsCount = 0 
+}) {
   const location = useLocation();
   const isLawyer = currentUser?.role === 'lawyer';
 
@@ -106,7 +115,7 @@ export default function Sidebar({ darkMode, setDarkMode, currentUser, onSwitchRo
           {currentUser?.name}
         </div>
         <div className="text-[10px] text-slate-400 truncate mt-0.5">
-          {isLawyer ? 'Chamber Managing Counsel' : 'Litigant • Rajesh Sharma'}
+          {isLawyer ? 'Chamber Managing Counsel' : 'Litigant Client'}
         </div>
       </div>
       
@@ -131,6 +140,41 @@ export default function Sidebar({ darkMode, setDarkMode, currentUser, onSwitchRo
           );
         })}
       </nav>
+
+      {/* Hearing Reminders & Audio Alarm Quick Button */}
+      <div className="px-4 pb-3">
+        <button
+          type="button"
+          onClick={onOpenAlarm}
+          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#12151d] hover:from-slate-800 hover:to-[#171b26] border border-slate-800/90 hover:border-teal-500/40 text-left transition-all cursor-pointer group shadow-xs"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors ${
+              todayHearingsCount > 0 
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' 
+                : 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+            }`}>
+              <Bell size={13} className={todayHearingsCount > 0 ? "animate-bounce" : "group-hover:scale-110 transition-transform"} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold text-slate-200 group-hover:text-white truncate">
+                Hearing Alarms
+              </div>
+              <div className="text-[10px] text-slate-400 truncate">
+                {todayHearingsCount > 0 ? `${todayHearingsCount} Today • Ring Active` : 'Chimes & Reminders'}
+              </div>
+            </div>
+          </div>
+
+          {todayHearingsCount > 0 ? (
+            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500 text-white animate-pulse">
+              TODAY
+            </span>
+          ) : (
+            <Volume2 size={13} className="text-slate-500 group-hover:text-teal-400 flex-shrink-0" />
+          )}
+        </button>
+      </div>
 
       {/* Bottom Switch Panel */}
       <div className="pt-4 pb-6 px-6 border-t border-slate-800/70">
