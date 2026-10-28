@@ -4,74 +4,152 @@ import {
   LayoutDashboard,
   Briefcase,
   Calendar,
-  Sun,
-  Moon
+  Moon,
+  CreditCard,
+  User,
+  ArrowLeftRight,
+  ShieldCheck,
+  UserCheck,
+  Gavel,
+  Landmark
 } from 'lucide-react';
 
-export default function Sidebar({ darkMode, setDarkMode }) {
+export default function Sidebar({ darkMode, setDarkMode, currentUser, onSwitchRole }) {
   const location = useLocation();
+  const isLawyer = currentUser?.role === 'lawyer';
 
-  const links = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Cases Registry', path: '/cases', icon: Briefcase },
-    { name: 'Hearings', path: '/hearings', icon: Calendar },
+  const lawyerLinks = [
+    { 
+      name: 'Chamber Command', 
+      path: '/', 
+      icon: LayoutDashboard,
+      isActive: location.pathname === '/'
+    },
+    { 
+      name: 'Master Docket Registry', 
+      path: '/cases', 
+      icon: Briefcase,
+      isActive: location.pathname === '/cases' || location.pathname.startsWith('/case/') || location.pathname === '/add-case'
+    },
+    { 
+      name: 'Bench Cause List', 
+      path: '/hearings', 
+      icon: Calendar,
+      isActive: location.pathname === '/hearings' || location.pathname === '/cause-list'
+    },
+    { 
+      name: 'Chamber Fee Ledger', 
+      path: '/payments', 
+      icon: CreditCard,
+      isActive: location.pathname === '/payments'
+    },
   ];
 
+  const clientLinks = [
+    { 
+      name: 'My Case Portal', 
+      path: '/', 
+      icon: LayoutDashboard,
+      isActive: location.pathname === '/'
+    },
+    { 
+      name: 'My Legal Matters', 
+      path: '/cases', 
+      icon: Briefcase,
+      isActive: location.pathname === '/cases' || location.pathname.startsWith('/case/') || location.pathname === '/add-case'
+    },
+    { 
+      name: 'Upcoming Court Dates', 
+      path: '/hearings', 
+      icon: Calendar,
+      isActive: location.pathname === '/hearings' || location.pathname === '/cause-list'
+    },
+    { 
+      name: 'Fee Receipts & Balances', 
+      path: '/payments', 
+      icon: CreditCard,
+      isActive: location.pathname === '/payments'
+    },
+  ];
+
+  const links = isLawyer ? lawyerLinks : clientLinks;
+
   return (
-    <div className={`w-64 h-screen flex flex-col p-5 border-r transition-colors duration-200 ${
-      darkMode ? 'bg-zinc-950 text-zinc-100 border-zinc-800' : 'bg-zinc-50 text-zinc-900 border-zinc-200'
-    }`}>
-      {/* Header */}
-      <div className="mb-8 px-2">
-        <div className="text-md font-bold tracking-wide uppercase text-zinc-500">
-          Legal Case Tracker
+    <aside className="w-64 h-screen flex flex-col bg-[#101216] border-r border-slate-800/80 select-none flex-shrink-0 z-20">
+      {/* Top Brand Logo */}
+      <div className="px-6 pt-7 pb-4">
+        <h1 className="text-[13px] font-extrabold tracking-widest text-white uppercase font-sans">
+          LEGAL CASE TRACKER
+        </h1>
+        <div className="text-[10px] text-teal-400 font-semibold tracking-wider uppercase mt-0.5">
+          {isLawyer ? 'Advocate Practice Management' : 'Litigant Client Briefing Room'}
+        </div>
+      </div>
+
+      {/* Role Switcher Pill Bar */}
+      <div className="mx-4 mb-5 p-3 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+            isLawyer ? 'bg-teal-950 text-teal-300 border border-teal-500/40' : 'bg-blue-950 text-blue-300 border border-blue-500/40'
+          }`}>
+            {isLawyer ? '⚖️ Lawyer (Admin)' : '👤 Client (User)'}
+          </span>
+          <button
+            onClick={onSwitchRole}
+            title="Toggle between Lawyer Admin and Client User"
+            className="text-[10px] text-teal-400 hover:text-teal-200 flex items-center gap-1 font-semibold cursor-pointer underline"
+          >
+            <ArrowLeftRight size={10} /> Switch
+          </button>
+        </div>
+        <div className="text-xs font-bold text-white truncate">
+          {currentUser?.name}
+        </div>
+        <div className="text-[10px] text-slate-400 truncate mt-0.5">
+          {isLawyer ? 'Chamber Managing Counsel' : 'Litigant • Rajesh Sharma'}
         </div>
       </div>
       
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 px-4 space-y-1.5">
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = location.pathname === link.path;
+          const active = link.isActive;
           return (
             <Link
               key={link.path}
               to={link.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive 
-                  ? (darkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-900 text-white shadow-sm') 
-                  : (darkMode ? 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200' : 'text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900')
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                active 
+                  ? 'bg-gradient-to-r from-[#0d2a29] to-[#0a2323] border border-teal-500/40 text-teal-300 shadow-[0_0_15px_rgba(20,184,166,0.18)]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
               }`}
             >
-              <Icon size={18} />
-              {link.name}
+              <Icon size={17} className={active ? 'text-teal-400' : 'text-slate-400'} />
+              <span>{link.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom Action Section */}
-      <div className="space-y-2 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-        {/* Theme Toggle Button */}
+      {/* Bottom Switch Panel */}
+      <div className="pt-4 pb-6 px-6 border-t border-slate-800/70">
         <button
+          type="button"
           onClick={() => setDarkMode(!darkMode)}
-          className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-medium border transition-all ${
-            darkMode
-              ? 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-850'
-              : 'border-zinc-200 bg-white text-zinc-700 shadow-sm hover:bg-zinc-100'
-          }`}
+          className="flex items-center gap-3 text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer group"
         >
-          {darkMode ? (
-            <>
-              <Sun size={14} className="text-amber-400" /> Light Mode
-            </>
-          ) : (
-            <>
-              <Moon size={14} className="text-zinc-500" /> Dark Mode
-            </>
-          )}
+          <div 
+            className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
+              darkMode ? 'bg-teal-500 justify-end' : 'bg-slate-600 justify-start'
+            }`}
+          >
+            <div className="w-4 h-4 rounded-full bg-white shadow-md transform transition-transform" />
+          </div>
+          <Moon size={14} className={darkMode ? 'text-teal-400' : 'text-slate-400 group-hover:text-slate-200'} />
+          <span className="font-sans">Dark Mode</span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Briefcase, Filter, ArrowUpDown } from 'lucide-react';
 import { getCases } from '../api';
 
 export default function Cases({ darkMode }) {
@@ -12,144 +12,171 @@ export default function Cases({ darkMode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[API] Fetching all cases...');
     getCases()
       .then(res => {
-        console.log('[API] Cases fetched successfully:', res.data);
-        setCases(res.data);
+        setCases(res.data || []);
       })
       .catch(err => console.error('[API ERROR] Failed to fetch cases:', err))
       .finally(() => setLoading(false));
   }, []);
 
-  // Simple clean filter logic
   const filteredCases = cases.filter(c => {
-    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          c.case_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          c.client_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      (c.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.case_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.client_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
     const matchesType = typeFilter === 'All' || c.case_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  const getStatusBadge = (status) => {
+    if (status === 'Active') {
+      return 'bg-[#d1fae5] text-[#065f46]';
+    }
+    if (status === 'Disposed') {
+      return 'bg-[#e0e7ff] text-[#3730a3]';
+    }
+    return 'bg-[#fef3c7] text-[#92400e]';
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Top Header Row */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-7">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className={`text-2xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
+          <h1 className="text-2xl lg:text-[26px] font-bold tracking-tight text-slate-900 dark:text-white">
             Case Registry
           </h1>
-          <p className={`text-sm mt-1 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-            Search and manage your firm's complete file archive.
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Search, filter, and manage your litigation docket archives.
           </p>
         </div>
         <button
           onClick={() => navigate('/add-case')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all ${
-            darkMode ? 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-800'
-          }`}
+          className="inline-flex items-center gap-2 bg-[#101216] dark:bg-teal-600 hover:bg-slate-800 dark:hover:bg-teal-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all self-start sm:self-auto cursor-pointer"
         >
-          <Plus size={14} /> Add Case File
+          <Plus size={15} /> Add Case File
         </button>
       </div>
 
       {/* Filter Action Control Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-3.5 text-zinc-400" size={16} />
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+        <div className="relative sm:col-span-6 lg:col-span-6">
+          <Search className="absolute left-3.5 top-3 text-slate-400" size={16} />
           <input
             type="text"
             placeholder="Search by case no, title, client..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2.5 text-xs rounded-xl border focus:outline-none transition-all ${
-              darkMode 
-                ? 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-600' 
-                : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-zinc-400'
-            }`}
+            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131720] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs placeholder:text-slate-400"
           />
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className={`w-full px-4 py-2 text-xs rounded-xl border focus:outline-none cursor-pointer transition-all ${
-            darkMode 
-              ? 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-600' 
-              : 'bg-white border-zinc-200 text-zinc-900 focus:border-zinc-400'
-          }`}
-        >
-          <option value="All" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>All Statuses</option>
-          <option value="Active" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>Active Only</option>
-          <option value="Disposed" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>Disposed Only</option>
-        </select>
+        <div className="sm:col-span-3 lg:col-span-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131720] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 cursor-pointer transition-all shadow-2xs"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Active">Active Only</option>
+            <option value="Disposed">Disposed Only</option>
+          </select>
+        </div>
 
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className={`w-full px-4 py-2 text-xs rounded-xl border focus:outline-none cursor-pointer transition-all ${
-            darkMode 
-              ? 'bg-zinc-950 border-zinc-800 text-white focus:border-zinc-600' 
-              : 'bg-white border-zinc-200 text-zinc-900 focus:border-zinc-400'
-          }`}
-        >
-          <option value="All" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>All Classifications</option>
-          <option value="Civil" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>Civil</option>
-          <option value="Criminal" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>Criminal</option>
-          <option value="Revenue" className={darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>Revenue</option>
-        </select>
+        <div className="sm:col-span-3 lg:col-span-3">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131720] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 cursor-pointer transition-all shadow-2xs"
+          >
+            <option value="All">All Classifications</option>
+            <option value="Civil">Civil</option>
+            <option value="Criminal">Criminal</option>
+            <option value="Revenue">Revenue</option>
+          </select>
+        </div>
       </div>
 
-      {/* Data Results Grid Layout */}
-      {loading ? (
-        <div className={`text-center py-16 border border-dashed rounded-xl ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
-          <p className="text-sm text-zinc-400">Loading cases...</p>
+      {/* Main Table Card */}
+      <div className="bg-white dark:bg-[#131720] border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] overflow-hidden p-6 transition-colors">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Briefcase size={16} className="text-teal-600 dark:text-teal-400" />
+            <span>Master Case Docket</span>
+            <span className="text-xs font-normal text-slate-400">({filteredCases.length} records)</span>
+          </div>
         </div>
-      ) : filteredCases.length === 0 ? (
-        <div className={`text-center py-16 border border-dashed rounded-xl ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
-          <p className="text-sm text-zinc-400">No active records matched your search parameters.</p>
-        </div>
-      ) : (
-        <div className={`border rounded-xl overflow-hidden transition-all ${
-          darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'
-        }`}>
+
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-block w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mb-2" />
+            <p className="text-xs text-slate-400">Loading cases registry...</p>
+          </div>
+        ) : filteredCases.length === 0 ? (
+          <div className="text-center py-14 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
+              <Briefcase size={22} />
+            </div>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              No cases matching your criteria
+            </p>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              {searchTerm || statusFilter !== 'All' || typeFilter !== 'All'
+                ? "Try adjusting your search terms or clearing filters."
+                : "Your docket is currently empty. Add your first case file to begin tracking."}
+            </p>
+            <button
+              onClick={() => navigate('/add-case')}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline pt-1"
+            >
+              <Plus size={13} /> Add New Case File
+            </button>
+          </div>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className={`border-b font-semibold uppercase tracking-wider ${
-                  darkMode ? 'bg-zinc-900 text-zinc-400 border-zinc-800' : 'bg-zinc-50 text-zinc-500 border-zinc-200'
-                }`}>
-                  <th className="px-6 py-3">Case Number</th>
-                  <th className="px-6 py-3">Title / Matter</th>
-                  <th className="px-6 py-3">Client Name</th>
-                  <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Status</th>
+                <tr className="border-b border-slate-100 dark:border-slate-800/80 text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  <th className="py-3 px-4">CASE NUMBER</th>
+                  <th className="py-3 px-4">TITLE / MATTER</th>
+                  <th className="py-3 px-4">CLIENT NAME</th>
+                  <th className="py-3 px-4">TYPE</th>
+                  <th className="py-3 px-4 text-center">STATUS</th>
                 </tr>
               </thead>
-              <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
                 {filteredCases.map((item) => (
                   <tr
                     key={item.id}
                     onClick={() => navigate(`/case/${item.id}`)}
-                    className={`transition-colors cursor-pointer ${darkMode ? 'hover:bg-zinc-900/50' : 'hover:bg-zinc-50/80'}`}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
                   >
-                    <td className="px-6 py-4 font-mono font-medium text-zinc-400">{item.case_number}</td>
-                    <td className={`px-6 py-4 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{item.title}</td>
-                    <td className="px-6 py-4">{item.client_name}</td>
-                    <td className="px-6 py-4">{item.case_type}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${
-                        item.status === 'Active' ? 'bg-zinc-900 text-zinc-100 border border-zinc-700' : 'bg-zinc-200 text-zinc-600'
-                      }`}>{item.status}</span>
+                    <td className="py-4 px-4 font-mono font-medium text-slate-600 dark:text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      {item.case_number}
+                    </td>
+                    <td className="py-4 px-4 font-medium text-slate-900 dark:text-white">
+                      {item.title}
+                    </td>
+                    <td className="py-4 px-4 text-slate-600 dark:text-slate-400">
+                      {item.client_name}
+                    </td>
+                    <td className="py-4 px-4 text-slate-600 dark:text-slate-400">
+                      {item.case_type}
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className={`inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold tracking-wide capitalize shadow-2xs ${getStatusBadge(item.status)}`}>
+                        {item.status}
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

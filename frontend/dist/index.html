@@ -3,13 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LexTrack - Legal Case Manager</title>
-    <!-- Add this line below to enable all your styling classes instantly -->
+    <title>Legal Case Tracker</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans for UI + JetBrains Mono for Case Numbers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN MUST BE LOADED FIRST -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="module" crossorigin src="/assets/index-DEFpksnr.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BK7nfFPu.css">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+            },
+            colors: {
+              brand: {
+                dark: '#0f1117',
+                sidebar: '#111318',
+                cardDark: '#161922',
+                borderDark: '#232733',
+              }
+            }
+          }
+        }
+      };
+    </script>
+    <script type="module" crossorigin src="/assets/index-DfpGimTG.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D97rxMJu.css">
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="antialiased selection:bg-teal-500 selection:text-white">
+    <div id="root"></div>
   </body>
 </html>
