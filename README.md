@@ -3,7 +3,7 @@
 A full-stack legal management workspace designed for legal professionals to streamline operations, manage case lifecycle states, and track real-time litigation metrics.
 
 ## 🚀 Live Links
-* **Frontend Web Application:** [Live on Vercel](https://legal-case-manager-li4r.vercel.app)
+* **Frontend Web Application:** [Live on Vercel](https://legal-case-manager-anushkaagarwal17s-projects.vercel.app)
 * **Backend API Service:** [Hosted on Render](https://lextrack-backend-8rih.onrender.com)
 
 ---
